@@ -2,13 +2,12 @@ import pygame
 import random
 
 #  To do :
-# -endbildschirm mit rückkehr zu menu,
 # -zwischenmenu mit esc,
-# -git management
 # -pvp, mit dir selber spielen
-# -zielpunktezahl einstellen
+# -zielpunktezahl in menü einstellen
 # -verschiedene ballgeschwindigkeiten für schwierigkeiten
 # -zurück zum menü bug
+# -ball berührt cpupaddle nicht ganz
 
 pygame.init()
 pygame.display.set_caption("Pong")
@@ -35,7 +34,7 @@ losesound = pygame.mixer.Sound('lose.wav')
 
 class Menu:
     menurun = True
-    difficulties = [("Easy", 2), ("Normal", 3), ("Hard", 4)] # list of tuples consisting of the difficulty with their matching cpuPaddleSpeed
+    difficulties = [("Easy", 2), ("Normal", 3), ("Hard", 4), ("Impossible", 6)] # list of tuples consisting of the difficulty with their matching cpuPaddleSpeed
     difficulty = 1 #current index of the difficulties list
 
     
@@ -45,11 +44,11 @@ class Menu:
         screen.blit(textInfo, (width, height))
 
     def printDifficulty(self):
-        self.printMenus('Difficulty: ' + self.difficulties[self.difficulty % 3] [0], FGCOLOR, WIDTH // 2 - 70, HEIGHT//2, 16)
+        self.printMenus('Difficulty: ' + self.difficulties[self.difficulty % len(self.difficulties)] [0], FGCOLOR, WIDTH // 2 - 70, HEIGHT//2, 16)
 
 
     def unprintDifficulty(self):
-        self.printMenus('Difficulty: ' + self.difficulties[self.difficulty % 3] [0], BGCOLOR, WIDTH // 2 - 70, HEIGHT//2, 16)
+        self.printMenus('Difficulty: ' + self.difficulties[self.difficulty % len(self.difficulties)] [0], BGCOLOR, WIDTH // 2 - 70, HEIGHT//2, 16)
 
     def printMenu(self):
         self.printMenus('PONG', FGCOLOR, WIDTH // 2 - 100, HEIGHT//4, 64)
@@ -66,6 +65,11 @@ class Menu:
         keys = pygame.key.get_pressed()
         if keys[pygame.K_SPACE]:
             self.menurun = False
+
+    def continueToMenu(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_SPACE]:
+            menu.menurun = True
 
     def changeDifficulty(self):
         keys = pygame.key.get_pressed()
@@ -113,11 +117,8 @@ class Score:
     def printWinner(self, menu):
         menu.printMenus(self.getWinner(), FGCOLOR, WIDTH // 2-150, HEIGHT //2-50, 32)
         menu.printMenus('Press space to continue', FGCOLOR, WIDTH // 2 - 95, HEIGHT//3*2, 16)
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_SPACE]:
-            menu.menurun = True
-        
-        #methodenaufruf bei space : menu.menurun = true
+
+    
 
 
 class Paddle:
@@ -150,10 +151,10 @@ class Paddle:
     #function to move the cpupaddle depending on the balls position
     def moveCPU(self, ball):
         self.show(BGCOLOR)
-        if self.calculateMovementForBall(ball) == 1 and self.y > BORDER:
+        if self.calculateMovementForBall(ball) == 1 and self.y - PADDLESPEEDCPU > BORDER:
             self.y = self.y - PADDLESPEEDCPU
             self.momentum = 1
-        elif self.calculateMovementForBall(ball) == -1 and self.y + self.height < HEIGHT-BORDER:
+        elif self.calculateMovementForBall(ball) == -1 and self.y + self.height + PADDLESPEEDCPU < HEIGHT-BORDER:
             self.y = self.y + PADDLESPEEDCPU
             self.momentum = -1
         else:
@@ -255,7 +256,7 @@ pygame.draw.rect(screen, pygame.Color("white"), pygame.Rect( (0,HEIGHT-BORDER), 
 
 
 #initlialize objects
-ball = Ball(WIDTH//2, HEIGHT //2, 5 , 0)
+ball = Ball(WIDTH//2, HEIGHT //2, BALLVELOCITY , 0)
 paddle = Paddle(WIDTH - 50, HEIGHT //2 -40, 10, 80)
 paddlecpu = Paddle(50, HEIGHT //2 - 40, 10, 80)
 score = Score()
@@ -278,7 +279,7 @@ while run:
 
     
 
-    PADDLESPEEDCPU = menu.difficulties[menu.difficulty%3] [1]
+    PADDLESPEEDCPU = menu.difficulties[menu.difficulty%len(menu.difficulties)] [1]
 
     if run:
         pygame.time.delay(30)
@@ -293,6 +294,22 @@ while run:
             ball.move_ball(paddle, paddlecpu, score, menu)
             paddle.move()
             paddlecpu.moveCPU(ball)
+        else:
+            while not menu.menurun:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                menu.continueToMenu()
+                pygame.time.delay(100)
+            
+            ball = Ball(WIDTH//2, HEIGHT //2, BALLVELOCITY , 0)
+            paddle = Paddle(WIDTH - 50, HEIGHT //2 -40, 10, 80)
+            paddlecpu = Paddle(50, HEIGHT //2 - 40, 10, 80)
+            score = Score()
+            menu = Menu()
+            screen = pygame.display.set_mode((WIDTH, HEIGHT))
+            pygame.draw.rect(screen, pygame.Color("white"), pygame.Rect( (0,0), (WIDTH,BORDER))) #north wall
+            pygame.draw.rect(screen, pygame.Color("white"), pygame.Rect( (0,HEIGHT-BORDER), (WIDTH,BORDER))) #south wall 
         pygame.display.flip()
         
 
