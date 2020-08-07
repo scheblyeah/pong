@@ -19,7 +19,7 @@ PADDLESPEED = 4
 PADDLESPEEDCPU = 2
 DRALLPLAYER = 3
 DRALLCPU = 2
-POINTSGOAL = 2
+POINTSGOAL = 5
 CPUPADDLEMOVETOLLERANCE = 10
 BALLVELOCITY = 5
 
@@ -203,9 +203,11 @@ class Ball:
         if self.x + self.velocityX + self.radius > WIDTH or self.x + self.velocityX - self.radius < 0:
             if self.x > WIDTH//2:
                 score.scoreCpu += 1
+                score.printcpu()
                 self.velocityX = BALLVELOCITY
             else: 
                 score.scorePlayer += 1
+                score.printplayer()
                 self.velocityX = - BALLVELOCITY
             if score.checkForWin():
                 score.gameIsOver = True
